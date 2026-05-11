@@ -2,6 +2,10 @@
 title: "Individual assignment 5 Test"
 author: "Audrey Juneman"
 format: pdf
+date: "2026-05-10"
+execute: 
+  message: false
+  warning: false
 ---
 
 # Set up
@@ -28,6 +32,9 @@ library(naniar)
 
 # arranging plots
 library(patchwork)
+
+#colors 
+library(NatParksPalettes)
 ```
 
 ## Data 
@@ -47,7 +54,8 @@ sites <- read_xlsx(here("data", "Aquatic Sampling Data-2026-03-10.xlsx"),
                    sheet = "sites")
 
 # water quality information
-water_quality <- read_xlsx(here("data", "Aquatic Sampling Data-2026-03-10.xlsx"),
+water_quality <- read_xlsx(here("data",
+                                "Aquatic Sampling Data-2026-03-10.xlsx"),
                            sheet = "Water Quality",
                            na = c("", "n/a", "N/A", "over", "173+")) 
 
@@ -115,7 +123,8 @@ aq_ins_clean <- aq_ins |>
                values_to = "abundance") |> 
   # group by date, site, taxon
   group_by(date, site, taxon) |> 
-  # calculate average abundance per liter (sum abundance divided by 7.5 liters)
+  # calculate average abundance per liter 
+  # (sum abundance divided by 7.5 liters)
   summarize(ave_lit = sum(abundance, na.rm = TRUE)/7.5) |> 
   # ungroup data frame
   ungroup() |> 
@@ -137,7 +146,8 @@ aq_ins_clean <- aq_ins |>
     site == "NDC" ~ "Devereux Creek"
   )) |> 
   # setting factor levels for site
-  mutate(site_full = fct_reorder(site_full, med_sal, .fun = "median", .na_rm = TRUE),
+  mutate(site_full = fct_reorder(site_full, med_sal,
+                                 .fun = "median", .na_rm = TRUE),
          site_full = fct_rev(site_full))
 
 ```
@@ -170,6 +180,8 @@ slice_sample(ostracods)
 
 ```{r}
 #| label: creating-fig-ostracods
+#| fig-height: 7
+#| fig-width: 8
 
 # base layer
 ostracodgraph <- ggplot(data = ostracods,
@@ -202,6 +214,8 @@ ostracodgraph
 
 ```{r}
 #| label: multipanel-figure
+#| fig-height: 14
+#| fig-width: 13
 
 # salinity 
 salinity <- ggplot(data = aq_ins_clean,
@@ -267,6 +281,66 @@ salinity / (copepods | ostracodgraph)
 
 ```
 
+## e) Interpret figure 
 
+- Copepods and ostrapods had similar levels of abundance at the sites 'South of Phelps Bridge' and 'Devereaux Creek' with values being relatively high, and also had similar low values at 'Main Channel' and 'North of Phelps Bridge'.  At the other sites, the values differed, with Copepods having more abundance in all of the other sites than Ostracods. 
+- I do not think that ostracod abundance relates to site level differences in salinity, because sites with lower salinity produced high and low levels of ostracods (Devereux Creek, Phelps Road, North of Phelps Bridge, South of Phelps Bridge). 
 
+#2. Visualizing total abundance as a function of salinity 
 
+## a) Plan your figure 
+
+- x-axis: `med_sal`
+- y-axis: `log_ave_lit`
+- color: `scientificName`
+- geom: `jitter`
+- facets: `facet_wrap(~variable, scales = "free")`
+
+## b) Wrangle your data 
+
+```{r}
+#| label: creating-data-log-salinity
+
+# creating new object from clean aquatic inverts 
+logsalinity2 <- aq_ins_clean |> 
+  # log + 1 transform mean abundance per liter
+  mutate(log_ave_lit = log(ave_lit + 1)) 
+
+slice_sample(logsalinity2)
+```
+
+## c) Code your figure 
+
+```{r}
+#| label: log-salinity-figure
+#| fig-height: 6
+#| fig-width: 7
+
+# base layer
+logsal <- ggplot(data = logsalinity2,
+       # x-axis: salinity
+       # y-axis: log_ave_lit
+       mapping = aes(x = med_sal,
+                     y = log_ave_lit, 
+                     color = scientificName)) +
+  geom_point() +
+  # wrapping x-axis text
+  scale_x_discrete(labels = label_wrap(width = 15)) +
+  # relabelling x- and y-axes
+  labs(x = "Median salinity (ppt)",
+       y = "Log transformed average abundance/L",
+       title = "Visualizing total abundance as a function of salinity") +
+  # different theme
+  theme_bw() + 
+  facet_wrap(~scientificName, scales = "free") +
+  scale_color_natparks_d("Torres") + 
+  theme(legend.position = "none")
+
+# displaying object
+logsal
+
+```
+
+## d) Interpret your figure 
+
+The Ceratopogonidae, the Chrionomidae, the Cladocera, the Corixidae, and the Ostracoda had similar relationships between salintiy and abundance, with higher levels at low salinities, and lower levels at higher salinities. The Nematoda, Polychaeta, Copepoda, and Olihochaeta did not show a clear relationship between salinity and abundance. Most plots started with high levels of abundance with low salinities, including the Ceratoponidae, Chrionomidae, Cladocera, Copepoda, Corixidae, Nematoda, Oligochaeta, and Ostracoda. 

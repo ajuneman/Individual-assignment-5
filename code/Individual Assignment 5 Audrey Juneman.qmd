@@ -1,7 +1,0 @@
----
-title: "Individual assignment 3"
-author: "Audrey Juneman"
-format: pdf
-date: "2026-05-10"
----
-

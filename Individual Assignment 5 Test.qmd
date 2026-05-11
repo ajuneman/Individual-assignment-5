@@ -146,14 +146,14 @@ aq_ins_clean <- aq_ins |>
 
 ## a) Plan your figure 
 
-- x-axis: `site`
+- x-axis: `site_full`
 - y-axis: `log_ave_lit`
 - geom for avg abundance: `jitter`
 - geom for medians: `point`
 
 ## b) Wrangle your data
 ```{r}
-#| label: 
+#| label: creating-ostracods
 
 # creating new object from clean aquatic inverts 
 ostracods <- aq_ins_clean |> 
@@ -164,7 +164,41 @@ ostracods <- aq_ins_clean |>
 
 slice_sample(ostracods)
 
-
-
 ```
+
+## c) Code your figure 
+
+```{r}
+#| label: creating-fig-ostracods
+
+# base layer
+ostracodgraph <- ggplot(data = ostracods,
+       # x-axis: site
+       # y-axis: mean salinity
+       mapping = aes(x = site_full,
+                     y = log_ave_lit)) +
+  # first layer: salinity measurements at each survey
+  geom_jitter(height = 0,
+              width = 0.1,
+              shape = 21) +
+  # wrapping x-axis text
+  scale_x_discrete(labels = label_wrap(width = 15)) +
+  # second layer: points to represent means
+  stat_summary(fun = median,
+               color = "orange",
+               size = 1) +
+  # relabelling x- and y-axes
+  labs(x = "Site",
+       y = "log + 1 transformed average abundance/L",
+       title = "Ostracods") +
+  # different theme
+  theme_bw()
+
+# displaying object
+ostracodgraph
+```
+
+
+
+
 
